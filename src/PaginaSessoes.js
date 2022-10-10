@@ -1,16 +1,20 @@
 import axios from "axios"
 import { useEffect, useState } from "react";
 import styled from "styled-components"
+import { Link, useParams } from "react-router-dom";
 
 export default function PaginaSessoes() {
-    const [horario, setHorario] = useState([])
+    const [sessao, setSessao] = useState([])
+    const [dia, setDia] = useState([])
+    const { filmeId } = useParams()
 
     useEffect(() => {
-        const listaSessoes = axios.get("https://mock-api.driven.com.br/api/v5/cineflex/movies/1/showtimes");
+        const listaSessoes = axios.get(`https://mock-api.driven.com.br/api/v5/cineflex/movies/${filmeId}/showtimes`);
         listaSessoes.then((resposta) => {
+            setSessao(resposta.data)
+            setDia(resposta.data.days)
             console.log(resposta.data)
-            setHorario(resposta.data)
-            console.log(resposta.data.id)
+            console.log(resposta.data.days)
         })
         listaSessoes.catch((erro) => {
             console.log(erro.response.data)
@@ -23,22 +27,25 @@ export default function PaginaSessoes() {
                 <p>Selecione o horário</p>
             </ContainerSelecionar>
             <ContainerSessoes>
-                <p>quinta-feira - 20/05/2022</p>
-                <Horarios>
-                    <BotaoHora>
-                        <p>10:30</p>
-                    </BotaoHora>
-                    <BotaoHora>
-                        <p>18:30</p>
-                    </BotaoHora>
-                </Horarios>
+                {dia.map((d) =>
+                    <>
+                        <p data-identifier="session-date">{d.weekday} - {d.date}</p>
+                        <Horarios>
+                            {d.showtimes.map((s) =>
+                                <Link to={`/assentos/${s.id}`}>
+                                    <BotaoHora>
+                                        <p data-identifier="hour-minute-btn">{s.name}</p>
+                                    </BotaoHora>
+                                </Link>)}
+                        </Horarios>
+                    </>
+                )}
             </ContainerSessoes>
             <FooterFilme>
-                <img src="https://pad.mymovies.it/filmclub/2019/06/247/locandina.jpg"/>
-                <p>Enola Holmes</p>
+                <img data-identifier="movie-img-preview" src={sessao.posterURL} />
+                <p data-identifier="movie-and-session-infos-preview">{sessao.title}</p>
             </FooterFilme>
         </ContainerPaginaSessoes>
-
     )
 }
 
@@ -55,20 +62,21 @@ const ContainerSelecionar = styled.div`
 margin-top: 67px;
 display: flex;
 justify-content: center;
-align-items: center;
 
     p{
         font-family: 'Roboto', sans-serif;
         font-size: 24px;
         font-weight: 400;
         margin-top: 35px;
-        margin-bottom: 35px;
+        margin-bottom: 25px;
 
     }
 `
 const ContainerSessoes = styled.div`
 width: 300px;
-height: 500px;
+height: 100%;
+margin-bottom: 80px;
+   
     p{
         font-family: 'Roboto', sans-serif;
         font-size: 20px;
@@ -81,6 +89,8 @@ const Horarios = styled.div`
 display: flex;
 flex-direction: row;
 flex-wrap: wrap;
+margin-bottom: 35px;
+margin-top: 25px;
 `
 
 const BotaoHora = styled.button`
@@ -91,9 +101,9 @@ border-radius: 3px;
 display: flex;
 justify-content: center;
 align-items: center;
-margin-top: 22px;
 margin-right:8px;
 border: none;
+    
     p{
         color: #FFFFFF;
         font-family: 'Roboto', sans-serif;
@@ -112,6 +122,7 @@ bottom: 0;
 display: flex;
 justify-content: flex-start;
 align-items: center;
+    
     img{
         width: 48px;
         height: 72px;

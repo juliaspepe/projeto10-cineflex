@@ -1,10 +1,11 @@
 import axios from "axios"
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import styled from "styled-components"
+
 
 export default function PaginaFilmes() {
     const [filmes, setFilmes] = useState([])
-    const [idFilme, setIdFilme] = useState('')
 
     useEffect(() => {
         const listaFilmes = axios.get("https://mock-api.driven.com.br/api/v5/cineflex/movies");
@@ -17,13 +18,21 @@ export default function PaginaFilmes() {
         })
     }, [])
 
+    if (filmes === undefined) {
+        return (<div>carregando...</div>)
+    }
+
     return (
         <ContainerPaginaFilmes>
             <ContainerSelecionar>
                 <p>Selecione o filme</p>
             </ContainerSelecionar>
+
             <ContainerFilmes>
-                {filmes.map((posterfilme) => <img src={posterfilme.posterURL} />)}
+                {filmes.map((posterfilme) =>
+                    <Link to={`/sessoes/${posterfilme.id}`}>
+                        <img data-identifier="movie-outdoor" src={posterfilme.posterURL} />
+                    </Link>)}
             </ContainerFilmes>
         </ContainerPaginaFilmes>
     )
@@ -61,6 +70,7 @@ display: flex;
 flex-direction: row;
 flex-wrap: wrap;
 justify-content: space-between;
+    
     img {
         width: 129px;
         height: 193px;

@@ -1,28 +1,33 @@
+import { Link } from "react-router-dom"
 import styled from "styled-components"
 
-export default function PaginaFinalizar() {
+export default function PaginaFinalizar({ infoFinais, setInfoFinais }) {
+
+    console.log(infoFinais)
+
     return (
         <ContainerPaginaFinalizar>
             <ContainerSelecionar>
                 <p>Pedido feito com sucesso!</p>
             </ContainerSelecionar>
-            <ContainerFinalizar>
+            <ContainerFinalizar >
                 <h1>Filme e sessão</h1>
-                <p>Enola Holmes</p>
-                <p>24/06/2021 15:00</p>
+                <p data-identifier="movie-session-infos-reserve-finished">{infoFinais.filme}</p>
+                <p data-identifier="movie-session-infos-reserve-finished">{infoFinais.data} - {infoFinais.hora}</p>
             </ContainerFinalizar>
             <ContainerFinalizar>
                 <h1>Ingressos</h1>
-                <p>Assento 01</p>
-                <p>Assento 02</p>
+                {infoFinais.assentoEscolhido.map((a) => (<p data-identifier="seat-infos-reserve-finished">Assento {a}</p>))}
             </ContainerFinalizar>
             <ContainerFinalizar>
                 <h1>Comprador</h1>
-                <p>Nome: Julia Pepe</p>
-                <p>CPF: 154500000-01</p>
+                <p data-identifier="buyer-infos-reserve-finished">Nome: {infoFinais.nome}</p>
+                <p data-identifier="buyer-infos-reserve-finished">CPF: {infoFinais.CPF}</p>
             </ContainerFinalizar>
             <BotaoHome>
-                <p>Voltar para Home</p>
+                <Link to={'/'}>
+                    <p data-identifier="back-to-home-btn">Voltar para Home</p>
+                </ Link>
             </BotaoHome>
         </ContainerPaginaFinalizar>
     )

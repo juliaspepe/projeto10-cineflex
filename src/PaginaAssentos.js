@@ -1,16 +1,67 @@
-import { useState } from "react"
+import axios from "axios"
+import { useEffect, useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
 import styled from "styled-components"
-import { useParams } from 'react-router-dom';
 
-
-export default function PaginaAssentos() {
+export default function PaginaAssentos({ infoFinais, setInfoFinais }) {
     const [nome, setNome] = useState('')
     const [CPF, setCPF] = useState('')
-    console.log(nome)
-    console.log(CPF)
-    const {filmeId} = useParams();
+    const [poster, setPoster] = useState('')
+    const [hora, setHora] = useState([])
+    const [lugar, setLugar] = useState([])
+    const [dia, setDia] = useState([])
+    const [data, setData] = useState([])
+    const [filme, setFilme] = useState([])
+    const [status, setStatus] = useState('disponivel')
+    const [assentoEscolhido, setAssentoEscolhido] = useState([])
+    const { sessaoId } = useParams()
+    const navigate = useNavigate()
+    console.log(status)
 
-	console.log(filmeId);
+    console.log(lugar)
+
+    useEffect(() => {
+        const listaAssentos = axios.get(`https://mock-api.driven.com.br/api/v5/cineflex/showtimes/${sessaoId}/seats`);
+        listaAssentos.then((resposta) => {
+            setHora(resposta.data.name)
+            setLugar(resposta.data.seats)
+            setPoster(resposta.data.movie.posterURL)
+            setFilme(resposta.data.movie.title)
+            setDia(resposta.data.day.weekday)
+            setData(resposta.data.day.date)
+
+        })
+        listaAssentos.catch((erro) => {
+            console.log(erro.response.data)
+        })
+    }, [])
+
+    function reservarAssento(disponibilidade, idAssento, escolhido) {
+        console.log(disponibilidade)
+
+        if (disponibilidade === true) {
+            setStatus('selecionado')
+            setAssentoEscolhido([...assentoEscolhido, escolhido])
+            alert(`assento ${escolhido} escolhido`)
+        } else {
+            alert("Assento indisponível")
+        }
+    }
+
+    function Infos(evento) {
+
+        evento.preventDefault();
+        const requisicao = axios.post("https://mock-api.driven.com.br/api/v5/cineflex/seats/book-many",
+            {
+                ids: assentoEscolhido,
+                name: nome,
+                cpf: CPF
+            });
+
+        setInfoFinais({ nome, CPF, filme, data, assentoEscolhido, hora })
+
+        requisicao.then(() => { navigate("/finalizar") })
+    }
 
     return (
         <>
@@ -19,38 +70,40 @@ export default function PaginaAssentos() {
                     <p>Selecione o(s) assento(s)</p>
                 </ContainerSelecionar>
                 <ContainerAssentos>
-                    <div>
-                        <p>01</p>
-                    </div>
+                    {lugar.map((n) =>
+                        <Assento status={status}>
+                            <p data-identifier="seat" onClick={() => reservarAssento(n.isAvailable, n.id, n.name)}>{n.name}</p>
+                        </Assento>
+                    )}
                 </ContainerAssentos>
                 <Legendas>
                     <Legenda>
-                        <div></div>
-                        <p>Selecionado</p>
+                        <Selecionado />
+                        <p data-identifier="seat-selected-subtitle">Selecionado</p>
                     </Legenda>
                     <Legenda>
-                        <div></div>
-                        <p>Disponível</p>
+                        <Disponivel />
+                        <p data-identifier="seat-available-subtitle">Disponível</p>
                     </Legenda>
                     <Legenda>
-                        <div></div>
-                        <p>Indisponível</p>
+                        <Indisponivel />
+                        <p data-identifier="seat-unavailable-subtitle">Indisponível</p>
                     </Legenda>
                 </Legendas>
                 <InfoComprador>
                     <p>Nome do comprador:</p>
-                    <input type="text" value={nome} onChange={e => setNome(e.target.value)}></input>
+                    <input data-identifier="buyer-name-input" type="text" value={nome} onChange={e => setNome(e.target.value)}></input>
                     <p>CPF do comprador:</p>
-                    <input type="text" value={CPF} onChange={e => setCPF(e.target.value)}></input>
+                    <input data-identifier="buyer-cpf-input" type="text" value={CPF} onChange={e => setCPF(e.target.value)}></input>
                 </InfoComprador>
                 <BotaoReservar>
-                    <p>Reservar assento(s)</p>
+                    <p data-identifier="reservation-btn" onClick={Infos}>Reservar assento(s)</p>
                 </BotaoReservar>
                 <FooterFilme>
-                    <img src="https://pad.mymovies.it/filmclub/2019/06/247/locandina.jpg" />
+                    <img src={poster} />
                     <FilmeHorario>
-                        <p>Enola Holmes</p>
-                        <p>Quinta-feira - 18:00</p>
+                        <p>{filme}</p>
+                        <p>{dia} - {hora}</p>
                     </FilmeHorario>
                 </FooterFilme>
             </ContainerPaginaAssentos>
@@ -84,20 +137,19 @@ align-items: center;
     }
 `
 const ContainerAssentos = styled.div`
-width: 330px;
+width: 300px;
 height: 200px;
 display: flex;
 justify-content: space-between;
-background-color: blue;
-flex-wrap: wrap;
+flex-wrap: wrap;  
+`
 
-    div{
-        width: 26px;
-        height:26px;
-        background-color: #C3CFD9;
-        border: 1px solid #808F9D;
-        border-radius: 12px;
-
+const Assento = styled.div`
+    width: 26px;
+    height:26px;
+    border: 1px solid #808F9D;
+    border-radius: 12px;
+    background-color: #C3CFD9;
         p{
             display: flex;
             justify-content: center;
@@ -109,8 +161,8 @@ flex-wrap: wrap;
             font-size: 11px;
             color: #000000;
         }
-    }
 `
+
 const Legendas = styled.div`
         width: 250px;
         height: 50px;
@@ -126,16 +178,6 @@ flex-direction: column;
 align-itens: center;
 justify-content: center;
     
-div {
-        width: 26px;
-        height:26px;
-        background-color: #C3CFD9;
-        border: 1px solid #808F9D;
-        border-radius: 12px;
-        margin-left: 17px;
-        margin-bottom: 10px;
-    }
-
     p{
         font-family: 'Roboto', sans-serif;
         font-style: normal;
@@ -144,6 +186,35 @@ div {
         color: #4E5A65;
         
     }
+`
+
+const Selecionado = styled.div`  
+width: 26px;
+height: 26px;
+background-color: #1AAE9E;
+border: 1px solid #0E7D71;
+border-radius: 12px;
+margin-left: 17px;
+margin-bottom: 10px;
+`
+
+const Disponivel = styled.div`  
+width: 26px;
+height: 26px;
+background-color: #C3CFD9;
+border: 1px solid #7B8B99;
+border-radius: 12px;
+margin-left: 17px;
+margin-bottom: 10px;
+`
+const Indisponivel = styled.div`  
+width: 26px;
+height: 26px;
+background-color: #FBE192;
+border: 1px solid #F7C52B;
+border-radius: 12px;
+margin-left: 17px;
+margin-bottom: 10px;
 `
 
 const FooterFilme = styled.div`
@@ -156,7 +227,8 @@ bottom: 0;
 display: flex;
 justify-content: flex-start;
 align-items: center;
-    img{
+    
+img{
         width: 48px;
         height: 72px;
         margin-left:18px;
